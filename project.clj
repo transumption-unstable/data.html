@@ -1,8 +1,9 @@
-(defproject com.yegortimoshenko/data.html "20170421.124711"
+(defproject com.yegortimoshenko/data.html "20170427.001236"
   :dependencies [[org.clojure/clojure "1.8.0"]
+                 [net.htmlparser.jericho/jericho-html "3.4"]
                  [org.jsoup/jsoup "1.10.2"]]
   :deploy-repositories {"sonatype" {:creds :gpg :url "https://oss.sonatype.org/service/local/staging/deploy/maven2"}}
-  :description "Zipper-compatible HTML reader/writer based on jsoup"
+  :description "Lazy zipper-compatible HTML reader/writer based on jsoup and amazing Jericho HTML Parser"
   :license {:name "Internet Systems Consortium License"
             :url "https://github.com/yegortimoshenko/data.html/blob/master/LICENSE"}
   :plugins [[lein-stamp "20170312.223701"]]
