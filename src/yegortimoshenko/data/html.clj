@@ -1,9 +1,10 @@
 (ns yegortimoshenko.data.html
-  "Lazy zipper-compatible HTML reader/writer built on top of jsoup and amazing Jericho HTML Parser"
+  "Lazy zipper-compatible HTML reader/writer built on top of amazing Jericho HTML Parser"
   (:refer-clojure :exclude [comment read read-string])
-  (:import (java.io InputStream Reader StringReader)
+  (:import (java.io InputStream Reader StringReader StringWriter Writer)
            (java.util Iterator)
-           (net.htmlparser.jericho Attribute Renderer StreamedSource StartTag StartTagType EndTag Segment)))
+           (net.htmlparser.jericho Attribute StreamedSource StartTag StartTagType EndTag EndTagType
+                                   StartTagTypeGenericImplementation)))
 
 (set! *warn-on-reflection* true)
 
@@ -44,17 +45,27 @@
              (cons (cons (node event) (lazy-seq (first tree)))
                    (lazy-seq (rest tree))))))))))
 
-(defrecord Comment [content])
 (defrecord Element [tag attrs content])
+
+(defn ^:private void? [^StartTag tag]
+  (or (.isEndTagForbidden tag) (= "track" (.getName tag))))
+
+(defn ^:private read-element [^StartTag tag]
+  (let [f (partial ->Element
+                   (keyword (.getName tag))
+                   (into {} (for [^Attribute a (.getAttributes tag)]
+                              [(keyword (.getKey a)) (.getValue a)])))]
+    (if (void? tag) (f nil) ^{:tag (keyword (.getName tag))} f)))
+
+(defrecord Comment [content])
 
 (defn ^:private read-comment [^StartTag tag]
   (Comment. (str (.getTagContent tag))))
 
-(defn ^:private read-element [^StartTag tag]
-  (partial ->Element
-           (keyword (.getName tag))
-           (into {} (for [^Attribute a (.getAttributes tag)]
-                      [(keyword (.getKey a)) (.getValue a)]))))
+(defrecord Raw [content])
+
+(defn ^:private read-raw [^StartTag tag]
+  (Raw. (str tag)))
 
 (defn ^:private read-event [^Iterator iterator]
   (if (.hasNext iterator)
@@ -63,20 +74,51 @@
         StartTag (condp = (.getStartTagType ^StartTag segment)
                    StartTagType/NORMAL (read-element segment)
                    StartTagType/COMMENT (read-comment segment)
-                   ::ignored)
+                   StartTagType/DOCTYPE_DECLARATION ::doctype
+                   (read-raw segment))
         EndTag ::exit
         (str segment)))))
 
 (defn ^:private event-seq [^Reader in]
-  (take-while some? (remove #{::ignored} (repeatedly (partial read-event (.iterator (StreamedSource. in)))))))
+  (->> (StreamedSource. in)
+       (.iterator)
+       (partial read-event)
+       (repeatedly)
+       (remove (partial = ::doctype))
+       (take-while some?)))
 
 (defn ^:private parent [event children]
   (when (fn? event) (event children)))
 
-(defn read [^Reader in]
-  (ffirst (seq-tree parent #{::exit} identity (event-seq in))))
+(defn ^:private infer
+  "TODO: lazily infers optional tags, see: http://w3.org/TR/html51/syntax.html#optional-tags"
+  [seq]
+  (let [f (fn [[elt & rest :as seq] seen]
+            (lazy-seq
+             (if (= :html (:tag (meta elt)))
+               seq
+               (cons (partial ->Element :html {}) seq))))]
+    (f seq #{})))
 
-(defn read-string [s]
+(defn ^:private register []
+  (.register (proxy [StartTagTypeGenericImplementation] ["" "<" ">" EndTagType/UNREGISTERED false]))
+  (.register StartTagType/NORMAL))
+
+(def ^:private register-memo (memoize register))
+
+(defn read
+  "Reads an HTML document from Reader and returns a clojure.xml compatible lazy element tree"
+  [^Reader in]
+  (register-memo)
+  (->> (event-seq in)
+       (drop-while (complement fn?))
+       (infer)
+       (seq-tree parent (partial = ::exit) identity)
+       (ffirst)))
+
+(defn read-string
+  "See yegortimoshenko.data.html/read"
+  [s]
   (read (StringReader. s)))
 
 (defn comment [content]
@@ -87,38 +129,51 @@
   ([tag attrs] (Element. tag attrs ()))
   ([tag attrs & content] (Element. tag attrs content)))
 
-(defn html [content]
-  (if (vector? content)
-    (let [[tag ?attrs & children] content]
-      (if (= tag :-comment)
-        (Comment. ?attrs)
-        (let [[attrs children] (if (map? ?attrs) [?attrs children] [{} (cons ?attrs children)])]
-          (Element. tag attrs (map html children)))))
-    (if (seq? content) (map html content) content)))
+(defn raw [content]
+  (Raw. content))
 
-(def ^:private base-uri (str))
-(def ^:private data-tags #{"script" "style"})
+(defn html
+  ([content]
+   (if (vector? content)
+     (let [[tag ?attrs & children] content]
+       (case tag
+         :-comment (Comment. ?attrs)
+         :-raw (Raw. ?attrs)
+         (let [[attrs children] (if (map? ?attrs) [?attrs children] [{} (cons ?attrs children)])]
+           (Element. tag attrs (remove nil? (map html children))))))
+     (if (seq? content) (map html content) content)))
+  ([content & more]
+   (html (cons content more))))
 
-(defn ^:private jsoup-element ^org.jsoup.nodes.Element [{:keys [tag attrs content]}]
-  (let [attrs2 (org.jsoup.nodes.Attributes.)]
-    (doseq [[k v] attrs]
-      (.put attrs2 (name k) (str v)))
-    (let [elt (org.jsoup.nodes.Element. (org.jsoup.parser.Tag/valueOf (name tag)) base-uri attrs2)]
-      (doseq [node content]
-        (.appendChild elt
-         (condp instance? node
-           Comment (org.jsoup.nodes.Comment. (:content node) base-uri)
-           Element (jsoup-element node)
-           String (if (data-tags tag)
-                    (org.jsoup.nodes.DataNode. node base-uri)
-                    (org.jsoup.nodes.TextNode. node base-uri))))) elt)))
+(defmacro ^:private codepoint [c] (int c))
 
-(defn ^:private jsoup-document ^org.jsoup.nodes.Document [elt]
-  (doto (org.jsoup.nodes.Document. base-uri)
-    (.outputSettings (doto (org.jsoup.nodes.Document$OutputSettings.) (.prettyPrint false)))
-    (.appendChild (jsoup-element elt))))
+(defn ^:private emit-doctype [^String s ^Writer out]
+  (when s
+    (.write out "<!DOCTYPE ")
+    (.write out s)
+    (.write out (codepoint \>))))
 
-(defn write-string [elt]
-  (str (jsoup-document elt)))
+(defn ^:private determine-doctype [doctype elt]
+  (if (= doctype ::auto)
+    (if-let [doctype (:doctype (meta elt))]
+      doctype
+      (if (= :html (:tag elt)) "html")) doctype))
 
-(def doctype "<!DOCTYPE html>")
+(defmulti emit (fn ([syntax elt ^Writer out] syntax)))
+
+(defmethod emit ::5 [_ elt ^Writer out]
+  (.write out "TODO"))
+
+(defn write
+  ([elt ^Writer out] (write {} elt out))
+  ([{:keys [doctype syntax] :or {doctype ::auto syntax ::5}} elt ^Writer out]
+   (emit-doctype (determine-doctype doctype elt) out)
+   (emit syntax elt out)))
+
+(defn write-string
+  "See yegortimoshenko.data.html/write"
+  ([elt] (write-string {} elt))
+  ([params elt]
+   (with-open [out (StringWriter.)]
+     (write params elt out)
+     (str out))))
