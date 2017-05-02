@@ -1,4 +1,4 @@
-(defproject com.yegortimoshenko/data.html "20170430.145133"
+(defproject com.yegortimoshenko/data.html "20170502.162037"
   :dependencies [[org.clojure/clojure "1.8.0"]
                  [net.htmlparser.jericho/jericho-html "3.4"]]
   :deploy-repositories {"sonatype" {:creds :gpg :url "https://oss.sonatype.org/service/local/staging/deploy/maven2"}}

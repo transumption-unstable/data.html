@@ -100,6 +100,8 @@
                (cons (partial ->Element :html {}) seq))))]
     (f seq #{})))
 
+(defn ^:private infer [seq] seq)
+
 (defn ^:private register []
   (.register (proxy [StartTagTypeGenericImplementation] ["" "<" ">" EndTagType/UNREGISTERED false]))
   (.register StartTagType/NORMAL))
