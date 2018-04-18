@@ -1,0 +1,1 @@
+{:deps {net.htmlparser.jericho/jericho-html {:mvn/version "3.4"}}}
