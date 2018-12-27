@@ -1,4 +1,2 @@
-.lein-failures
-.lein-repl-history
-pom.xml*
-target/
+.cpcache/
+.nrepl-port
