@@ -1,9 +1,10 @@
 (ns yegortimoshenko.data.html
-  "Lazy zipper-compatible HTML reader/writer built on top of amazing Jericho HTML Parser"
+  "Lazy zipper-compatible HTML reader/writer built on top of Jericho HTML Parser"
   (:refer-clojure :exclude [comment read read-string])
-  (:import (java.io InputStream Reader StringReader StringWriter Writer)
+  (:import (java.io Reader Writer StringReader StringWriter)
            (java.util Iterator)
-           (net.htmlparser.jericho Attribute StreamedSource StartTag StartTagType EndTag EndTagType
+           (net.htmlparser.jericho Attribute StreamedSource StartTag
+                                   StartTagType EndTag EndTagType
                                    StartTagTypeGenericImplementation)))
 
 (set! *warn-on-reflection* true)
