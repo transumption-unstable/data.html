@@ -64,11 +64,6 @@
 (defn ^:private read-comment [^StartTag tag]
   (Comment. (str (.getTagContent tag))))
 
-(defrecord Raw [content])
-
-(defn ^:private read-raw [^StartTag tag]
-  (Raw. (str tag)))
-
 (defn ^:private read-event [^Iterator iterator]
   (if (.hasNext iterator)
     (let [segment (.next iterator)]
@@ -133,16 +128,12 @@
   ([tag attrs] (Element. tag attrs ()))
   ([tag attrs & content] (Element. tag attrs content)))
 
-(defn raw [content]
-  (Raw. content))
-
 (defn html
   ([content]
    (if (vector? content)
      (let [[tag ?attrs & children] content]
        (case tag
          :-comment (Comment. ?attrs)
-         :-raw (Raw. ?attrs)
          (let [[attrs children] (if (map? ?attrs) [?attrs children] [{} (cons ?attrs children)])]
            (Element. tag attrs (remove nil? (map html children))))))
      (if (seq? content) (map html content) content)))
