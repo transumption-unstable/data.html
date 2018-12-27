@@ -14,7 +14,7 @@
   (lazy-seq
     (cond
       (fn? leaf) [(leaf (lazy-tree leaves))]
-      (= :> leaf) (lazy-tree leaves)
+      (= :up leaf) (lazy-tree leaves)
       (some? leaf) (cons leaf (lazy-tree leaves)))))
 
 (defn ^:private read-element [^StartTag segment]
@@ -39,7 +39,7 @@
     (if-let [reader (readers (.getStartTagType x))]
       (reader x)))
   EndTag
-  (read-segment [_] :>)
+  (read-segment [_] :up)
   java.lang.Object
   (read-segment [x] (str x)))
 
@@ -52,7 +52,8 @@
   (map read-segment (-> in StreamedSource. .iterator lazy-iterator)))
 
 (defn read
-  "Reads an HTML document from Reader and returns a clojure.xml compatible lazy element tree"
+  "Reads an HTML document from Reader and returns a seq of clojure.xml
+  compatible lazy element trees."
   [^Reader in]
   (-> in event-seq lazy-tree))
 
