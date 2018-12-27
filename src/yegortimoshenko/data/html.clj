@@ -10,27 +10,28 @@
 
 (defn ^{:author "Chris Houser"
         :copyright "Rich Hickey"
-        :example `(seq-tree #(when (= %1 :<) (vector %2)) #{:>} str
-                            [1 2 :< 3 :< 4 :> :> 5 :> 6])
         :license "Eclipse Public License"
         :origin "https://git.io/v93Od"
         :private true}
   seq-tree
-  "Takes a seq of events that logically represents
-  a tree by each event being one of: enter-sub-tree event,
-  exit-sub-tree event, or node event.
-  Returns a lazy sequence whose first element is a sequence of
-  sub-trees and whose remaining elements are events that are not
-  siblings or descendants of the initial event.
-  The given exit? function must return true for any exit-sub-tree
-  event.  parent must be a function of two arguments: the first is an
-  event, the second a sequence of nodes or subtrees that are children
-  of the event.  parent must return nil or false if the event is not
-  an enter-sub-tree event.  Any other return value will become
-  a sub-tree of the output tree and should normally contain in some
-  way the children passed as the second arg.  The node function is
-  called with a single event arg on every event that is neither parent
-  nor exit, and its return value will become a node of the output tree."
+  "Takes a seq of events that logically represents a tree by each event being
+  one of: enter-sub-tree event, exit-sub-tree event, or node event.
+
+  Returns a lazy sequence whose first element is a sequence of sub-trees and
+  whose remaining elements are events that are not siblings or descendants of
+  the initial event.
+
+  The given exit? function must return true for any exit-sub-tree event.
+
+  parent must be a function of two arguments: the first is an event, the second
+  a sequence of nodes or subtrees that are children of the event. parent must
+  return nil or false if the event is not an enter-sub-tree event. Any other
+  return value will become a sub-tree of the output tree and should normally
+  contain in some way the children passed as the second arg.
+
+  The node function is called with a single event arg on every event that is
+  neither parent nor exit, and its return value will become a node of the
+  output tree."
   [parent exit? node coll]
   (lazy-seq
    (when-let [[event] (seq coll)]
