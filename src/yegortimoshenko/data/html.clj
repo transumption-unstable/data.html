@@ -149,17 +149,8 @@
 
 (defmacro ^:private codepoint [c] (int c))
 
-(defn ^:private emit-doctype [^String s ^Writer out]
-  (when s
-    (.write out "<!DOCTYPE ")
-    (.write out s)
-    (.write out (codepoint \>))))
-
-(defn ^:private determine-doctype [doctype elt]
-  (if (= doctype ::auto)
-    (if-let [doctype (:doctype (meta elt))]
-      doctype
-      (if (= :html (:tag elt)) "html")) doctype))
+(defn ^:private emit-doctype [^Writer out]
+  (.write out "<!doctype html>"))
 
 (defmulti emit (fn ([syntax elt ^Writer out] syntax)))
 
@@ -168,8 +159,8 @@
 
 (defn write
   ([elt ^Writer out] (write {} elt out))
-  ([{:keys [doctype syntax] :or {doctype ::auto syntax ::5}} elt ^Writer out]
-   (emit-doctype (determine-doctype doctype elt) out)
+  ([{:keys [syntax] :or {syntax ::5}} elt ^Writer out]
+   (emit-doctype out)
    (emit syntax elt out)))
 
 (defn write-string
