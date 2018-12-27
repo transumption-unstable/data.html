@@ -152,21 +152,16 @@
 (defn ^:private emit-doctype [^Writer out]
   (.write out "<!doctype html>"))
 
-(defmulti emit (fn ([syntax elt ^Writer out] syntax)))
-
-(defmethod emit ::5 [_ elt ^Writer out]
+(defn emit [elt ^Writer out]
   (.write out "TODO"))
 
-(defn write
-  ([elt ^Writer out] (write {} elt out))
-  ([{:keys [syntax] :or {syntax ::5}} elt ^Writer out]
-   (emit-doctype out)
-   (emit syntax elt out)))
+(defn write [elt ^Writer out]
+  (emit-doctype out)
+  (emit elt out))
 
 (defn write-string
   "See yegortimoshenko.data.html/write"
-  ([elt] (write-string {} elt))
-  ([params elt]
-   (with-open [out (StringWriter.)]
-     (write params elt out)
-     (str out))))
+  [elt]
+  (with-open [out (StringWriter.)]
+    (write elt out)
+    (str out)))
