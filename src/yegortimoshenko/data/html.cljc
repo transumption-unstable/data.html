@@ -2,25 +2,37 @@
   (:refer-clojure :exclude [comment read read-string])
   (:require #?(:clj [clojure.core.match :refer [match]]
                :cljs [cljs.core.match :refer-macros [match]])
-            [yegortimoshenko.data.html.types :as t]
+            [clojure.string :as str]
+            [yegortimoshenko.data.html.nodes :as n]
             #?(:clj [yegortimoshenko.data.html.reader :as r])
             #?(:clj [yegortimoshenko.data.html.writer :as w])))
 
 (defn element
-  ([tag] (t/->Element tag {} ()))
-  ([tag attrs] (t/->Element tag attrs ()))
-  ([tag attrs & content] (t/->Element tag attrs content)))
+  ([tag] (n/->Element tag {} ()))
+  ([tag attrs] (n/->Element tag attrs ()))
+  ([tag attrs & content] (n/->Element tag attrs content)))
 
-(defn comment [content]
-  (t/->Comment content))
+(defn comment
+  "Creates a Comment node, validating its text against the standard:
+  https://html.spec.whatwg.org/#comments
+
+  Returns nil if validation fails."
+  [text]
+  (when-not (or (str/starts-with? text ">")
+                (str/starts-with? text "->")
+                (str/includes? text "<!--")
+                (str/includes? text "-->")
+                (str/includes? text "--!>")
+                (str/ends-with? text "<!-"))
+    (n/->Comment text)))
 
 (defn html
-  "Build HTML DOM tree from Hiccup-like data structure."
+  "Builds HTML tree from Hiccup-like data structure."
   [data]
   (match data
     [[& _] & _] (mapcat html data)
-    [tag (attrs :guard map?) & children] [(t/->Element tag attrs (mapcat html children))]
-    [tag & children] [(t/->Element tag {} (mapcat html children))]
+    [tag (attrs :guard map?) & children] [(n/->Element tag attrs (mapcat html children))]
+    [tag & children] [(n/->Element tag {} (mapcat html children))]
     :else [data]))
 
 #?(:clj (def read r/read))
