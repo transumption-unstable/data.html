@@ -6,7 +6,7 @@
                                    StartTagType EndTag EndTagType
                                    StartTagTypeGenericImplementation))
   (:refer-clojure :exclude [read read-string])
-  (:require [yegortimoshenko.data.html.nodes :as n]))
+  (:require [yegortimoshenko.data.html.node :as node]))
 
 (set! *warn-on-reflection* true)
 
@@ -21,10 +21,10 @@
   (let [tag (keyword (.getName segment))
         attrs (into {} (for [^Attribute a (.getAttributes segment)]
                          [(keyword (.getKey a)) (.getValue a)]))]
-    (partial n/->Element tag attrs)))
+    (partial node/->Element tag attrs)))
 
 (defn ^:private read-comment [^StartTag segment]
-  (-> segment .getTagContent str n/->Comment))
+  (-> segment .getTagContent str node/->Comment))
 
 (def readers
   {StartTagType/NORMAL read-element

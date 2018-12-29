@@ -13,11 +13,11 @@
   - html-minifier <https://git.io/vf3AC>
   - Html5Printer <https://git.io/fhkNT>"
   (:require [clojure.string :as str]
-            [yegortimoshenko.data.html.nodes])
+            [yegortimoshenko.data.html.node])
   (:import (clojure.lang Keyword Sequential)
            (java.io Writer StringWriter)
            (java.util Set)
-           (yegortimoshenko.data.html.nodes Comment Element)))
+           (yegortimoshenko.data.html.node Comment Element)))
 
 (set! *warn-on-reflection* true)
 
