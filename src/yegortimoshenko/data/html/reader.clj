@@ -1,61 +1,54 @@
 (ns yegortimoshenko.data.html.reader
   "Lazy HTML reader built on top of Jericho HTML Parser."
+  (:refer-clojure :exclude [read read-string])
+  (:require [yegortimoshenko.data.html.node :as node])
   (:import (java.io Reader StringReader)
            (java.util Iterator)
-           (net.htmlparser.jericho Attribute StreamedSource StartTag
-                                   StartTagType EndTag EndTagType
-                                   StartTagTypeGenericImplementation))
-  (:refer-clojure :exclude [read read-string])
-  (:require [yegortimoshenko.data.html.node :as node]))
+           (net.htmlparser.jericho StreamedSource Attribute Segment
+                                   StartTag StartTagType EndTag)))
 
 (set! *warn-on-reflection* true)
 
-(defn ^:private lazy-tree [[leaf & leaves]]
-  (lazy-seq
-    (cond
-      (fn? leaf) [(leaf (lazy-tree leaves))]
-      (= :up leaf) (lazy-tree leaves)
-      (some? leaf) (cons leaf (lazy-tree leaves)))))
+(defprotocol Tree
+  (tree [this rest]))
 
-(defn ^:private read-element [^StartTag segment]
-  (let [tag (keyword (.getName segment))
-        attrs (into {} (for [^Attribute a (.getAttributes segment)]
-                         [(keyword (.getKey a)) (.getValue a)]))]
-    (partial node/->Element tag attrs)))
+(defn lazy-tree [[this & rest]]
+  (lazy-seq (tree this rest)))
 
-(defn ^:private read-comment [^StartTag segment]
-  (-> segment .getTagContent str node/->Comment))
+(defn lazy-leaf [leaf rest]
+  (cons leaf (lazy-tree rest)))
 
-(def readers
-  {StartTagType/NORMAL read-element
-   StartTagType/COMMENT read-comment})
-
-(defprotocol Segment
-  (read-segment [x]))
-
-(extend-protocol Segment
+(extend-protocol Tree
   StartTag
-  (read-segment [x]
-    (if-let [reader (readers (.getStartTagType x))]
-      (reader x)))
+  (tree [this rest]
+    (condp = (.getStartTagType this)
+      StartTagType/NORMAL
+      [(node/->Element
+        (keyword (.getName this))
+        (into {} (for [^Attribute a (.getAttributes this)]
+                   [(keyword (.getKey a)) (.getValue a)]))
+        (lazy-tree rest))]
+      StartTagType/COMMENT
+      (lazy-leaf (node/->Comment (str (.getTagContent this))) rest)))
   EndTag
-  (read-segment [_] :up)
-  Object
-  (read-segment [x] (str x)))
+  (tree [this rest]
+    (lazy-tree rest))
+  nil
+  (tree [this rest])
+  Segment
+  (tree [this rest]
+    (lazy-leaf (str this) rest)))
 
 (defn lazy-iterator [^Iterator iter]
   (lazy-seq
     (when (.hasNext iter)
       (cons (.next iter) (lazy-iterator iter)))))
 
-(defn ^:private event-seq [^Reader in]
-  (map read-segment (-> in StreamedSource. .iterator lazy-iterator)))
-
 (defn read
   "Reads an HTML document from Reader and returns a seq of clojure.xml
   compatible lazy element trees."
   [^Reader in]
-  (-> in event-seq lazy-tree))
+  (-> in StreamedSource. .iterator lazy-iterator lazy-tree))
 
 (defn read-string
   "See yegortimoshenko.data.html/read"
