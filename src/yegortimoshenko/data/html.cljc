@@ -21,7 +21,7 @@
   ISeq
   (html [this] (mapcat html this))
   nil
-  (html [this])
+  (html [this] [])
   String
   (html [this] [this]))
 
