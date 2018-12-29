@@ -79,6 +79,11 @@
     :h1 :h2 :h3 :h4 :h5 :h6 :header :hgroup :hr :main :nav :ol :p :pre
     :section :table :ul})
 
+(def void-elements
+  "https://html.spec.whatwg.org/#elements-2"
+  #{:area :base :br :col :embed :hr :img :input
+    :link :meta :param :source :track :wbr})
+
 (defn escape-text ^String [s]
   (str/replace s #"<" "&lt;"))
 
@@ -102,8 +107,9 @@
         (write-attr-value v w))
       (.write w ">")
       (write-node content nil w)
-      (doseq [chunk ["</" tag-name ">"]]
-        (.write w ^String chunk))))
+      (when-not (void-elements tag)
+        (doseq [chunk ["</" tag-name ">"]]
+          (.write w ^String chunk)))))
   Sequential
   (write-node [those _ w]
     (loop [[this & rest] those]
