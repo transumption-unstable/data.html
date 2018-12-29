@@ -1,7 +1,7 @@
 (ns yegortimoshenko.data.html
   (:import (clojure.lang IPersistentVector ISeq))
   (:refer-clojure :exclude [comment read read-string])
-  (:require [yegortimoshenko.data.html.node :as node :refer [node?]]
+  (:require [yegortimoshenko.data.html.node :as node]
             #?(:clj [yegortimoshenko.data.html.reader :as r])
             #?(:clj [yegortimoshenko.data.html.writer :as w])))
 
@@ -10,7 +10,8 @@
 
 (defn ^:private attrs? [x]
   (and (map? x)
-       (not (node? x))))
+       (not (node/Element? x))
+       (not (node/Comment? x))))
 
 (extend-protocol HTML
   IPersistentVector
