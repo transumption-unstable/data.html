@@ -20,6 +20,8 @@
       (node/->Element tag {} (html (cons ?attrs content))))])
   ISeq
   (html [this] (mapcat html this))
+  nil
+  (html [this])
   String
   (html [this] [this]))
 
