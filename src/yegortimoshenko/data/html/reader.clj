@@ -1,11 +1,12 @@
 (ns yegortimoshenko.data.html.reader
   "Lazy HTML reader built on top of Jericho HTML Parser."
   (:refer-clojure :exclude [read read-string])
-  (:require [yegortimoshenko.data.html.node :as node])
+  (:require [yegortimoshenko.data.html.node :as node]
+            [yegortimoshenko.data.html.spec :as spec])
   (:import (java.io Reader StringReader)
            (java.util Iterator)
            (net.htmlparser.jericho StreamedSource Attribute Segment
-                                   StartTag StartTagType EndTag)))
+                                   StartTag EndTag)))
 
 (set! *warn-on-reflection* true)
 
@@ -21,14 +22,15 @@
 (extend-protocol Tree
   StartTag
   (tree [this rest]
-    (condp = (.getStartTagType this)
-      StartTagType/NORMAL
-      [(node/->Element
-        (keyword (.getName this))
-        (into {} (for [^Attribute a (.getAttributes this)]
-                   [(keyword (.getKey a)) (.getValue a)]))
-        (lazy-tree rest))]
-      StartTagType/COMMENT
+    (case (-> this .getStartTagType .getDescription)
+      "normal"
+      (let [tag (keyword (.getName this))
+            attrs (into {} (for [^Attribute a (.getAttributes this)]
+                             [(keyword (.getKey a)) (.getValue a)]))]
+        (if (spec/void-elements tag)
+          (lazy-leaf (node/->Element tag attrs ()) rest)
+          [(node/->Element tag attrs (lazy-tree rest))]))
+      "comment"
       (lazy-leaf (node/->Comment (str (.getTagContent this))) rest)))
   EndTag
   (tree [this rest]

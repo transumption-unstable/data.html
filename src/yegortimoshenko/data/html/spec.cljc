@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [yegortimoshenko.data.html.node :as node]))
 
-(defn ^:private valid-comment-text?
+(defn valid-comment?
   "https://html.spec.whatwg.org/#comments"
   [{:keys [text]}]
   (not (or (str/starts-with? text ">")
@@ -16,5 +16,10 @@
 
 (s/def ::comment
  (s/with-gen
-   (s/and node/Comment? valid-comment-text?)
+   (s/and node/Comment? valid-comment?)
    #(gen/fmap node/->Comment (gen/string))))
+
+(def void-elements
+  "https://html.spec.whatwg.org/#elements-2"
+  #{:area :base :br :col :embed :hr :img :input
+    :link :meta :param :source :track :wbr})

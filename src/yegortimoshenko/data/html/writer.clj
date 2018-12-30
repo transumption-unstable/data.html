@@ -13,7 +13,8 @@
   - html-minifier <https://git.io/vf3AC>
   - Html5Printer <https://git.io/fhkNT>"
   (:require [clojure.string :as str]
-            [yegortimoshenko.data.html.node])
+            [yegortimoshenko.data.html.node]
+            [yegortimoshenko.data.html.spec :as spec])
   (:import (clojure.lang Keyword Sequential)
            (java.io Writer StringWriter)
            (java.util Set)
@@ -79,11 +80,6 @@
     :h1 :h2 :h3 :h4 :h5 :h6 :header :hgroup :hr :main :nav :ol :p :pre
     :section :table :ul})
 
-(def void-elements
-  "https://html.spec.whatwg.org/#elements-2"
-  #{:area :base :br :col :embed :hr :img :input
-    :link :meta :param :source :track :wbr})
-
 (defn escape-text ^String [s]
   (str/replace s #"<" "&lt;"))
 
@@ -107,7 +103,7 @@
         (write-attr-value v w))
       (.write w ">")
       (write-node content nil w)
-      (when-not (void-elements tag)
+      (when-not (spec/void-elements tag)
         (doseq [chunk ["</" tag-name ">"]]
           (.write w ^String chunk)))))
   Sequential
