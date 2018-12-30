@@ -46,16 +46,19 @@
   (tree [head tail]
     (lazy-leaf (str head) tail)))
 
-(defn lazy-iterator [^Iterator iter]
+(defn lazy-iterator-seq [^Iterator iter]
   (lazy-seq
     (when (.hasNext iter)
-      (cons (.next iter) (lazy-iterator iter)))))
+      (cons (.next iter) (lazy-iterator-seq iter)))))
+
+(defn lazy-iterator [^Iterable i]
+  (lazy-iterator-seq (.iterator i)))
 
 (defn read
   "Reads an HTML document from Reader and returns a seq of clojure.xml
   compatible lazy element trees."
   [^Reader in]
-  (-> in StreamedSource. .iterator lazy-iterator lazy-tree))
+  (-> in StreamedSource. lazy-iterator lazy-tree))
 
 (defn read-string
   "See yegortimoshenko.data.html/read"
