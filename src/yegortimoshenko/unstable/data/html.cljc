@@ -1,9 +1,9 @@
-(ns yegortimoshenko.data.html
+(ns yegortimoshenko.unstable.data.html
   (:import (clojure.lang IPersistentVector ISeq))
   (:refer-clojure :exclude [comment read read-string])
-  (:require [yegortimoshenko.data.html.node :as node]
-            #?(:clj [yegortimoshenko.data.html.reader :as r])
-            #?(:clj [yegortimoshenko.data.html.writer :as w])))
+  (:require [yegortimoshenko.unstable.data.html.node :as node]
+            #?(:clj [yegortimoshenko.unstable.data.html.reader :as r])
+            #?(:clj [yegortimoshenko.unstable.data.html.writer :as w])))
 
 (defprotocol HTML
   (html [this]))

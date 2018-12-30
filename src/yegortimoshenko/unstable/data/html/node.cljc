@@ -1,4 +1,4 @@
-(ns yegortimoshenko.data.html.node
+(ns yegortimoshenko.unstable.data.html.node
   (:refer-clojure :exclude [comment]))
 
 (defrecord Element [tag attrs content])

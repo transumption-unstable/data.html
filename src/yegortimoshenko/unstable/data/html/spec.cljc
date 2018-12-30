@@ -1,7 +1,7 @@
-(ns yegortimoshenko.data.html.spec
+(ns yegortimoshenko.unstable.data.html.spec
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [yegortimoshenko.data.html.node :as node]))
+            [yegortimoshenko.unstable.data.html.node :as node]))
 
 (def void-elements
   "https://html.spec.whatwg.org/#elements-2"
