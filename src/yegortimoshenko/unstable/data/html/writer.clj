@@ -7,8 +7,6 @@
   in technically invalid HTML. This implementation ignores such optimization
   opportunities.
 
-  TODO: skip optional tags.
-
   References:
   - html-minifier <https://git.io/vf3AC>
   - Html5Printer <https://git.io/fhkNT>"
