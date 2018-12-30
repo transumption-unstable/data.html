@@ -92,7 +92,7 @@
     (doseq [^String chunk ["<!--" text "-->"]]
       (.write w chunk)))
   Element
-  (write-node [{:keys [attrs content tag]} next ^Writer w]
+  (write-node [{:keys [attrs content tag] :as elt} next ^Writer w]
     (let [tag-name (name tag)]
       (doseq [chunk ["<" tag-name]]
         (.write w ^String chunk))
@@ -103,7 +103,7 @@
         (write-attr-value v w))
       (.write w ">")
       (write-node content nil w)
-      (when-not (spec/void-elements tag)
+      (when-not (spec/void-element? elt)
         (doseq [chunk ["</" tag-name ">"]]
           (.write w ^String chunk)))))
   Sequential
