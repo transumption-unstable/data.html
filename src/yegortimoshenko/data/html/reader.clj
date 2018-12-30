@@ -11,35 +11,40 @@
 (set! *warn-on-reflection* true)
 
 (defprotocol Tree
-  (tree [this rest]))
+  (tree [head tail]))
 
-(defn lazy-tree [[this & rest]]
-  (lazy-seq (tree this rest)))
+(defn lazy-tree [[head & tail]]
+  (lazy-seq (tree head tail)))
 
-(defn lazy-leaf [leaf rest]
-  (cons leaf (lazy-tree rest)))
+(defn lazy-leaf [head tail]
+  (cons head (lazy-tree tail)))
+
+(defn lazy-branch [parent events]
+  (let [[children [_ & siblings]]
+        (split-with some? (lazy-tree events))]
+    (cons (parent children) siblings)))
 
 (extend-protocol Tree
   StartTag
-  (tree [this rest]
-    (case (-> this .getStartTagType .getDescription)
+  (tree [head tail]
+    (case (-> head .getStartTagType .getDescription)
       "normal"
-      (let [tag (keyword (.getName this))
-            attrs (into {} (for [^Attribute a (.getAttributes this)]
+      (let [tag (keyword (.getName head))
+            attrs (into {} (for [^Attribute a (.getAttributes head)]
                              [(keyword (.getKey a)) (.getValue a)]))]
         (if (spec/void-elements tag)
-          (lazy-leaf (node/->Element tag attrs ()) rest)
-          [(node/->Element tag attrs (lazy-tree rest))]))
+          (lazy-leaf (node/->Element tag attrs ()) tail)
+          (lazy-branch #(node/->Element tag attrs %) tail)))
       "comment"
-      (lazy-leaf (node/->Comment (str (.getTagContent this))) rest)))
+      (lazy-leaf (node/->Comment (str (.getTagContent head))) tail)))
   EndTag
-  (tree [this rest]
-    (lazy-tree rest))
+  (tree [_ tail]
+    (lazy-leaf nil tail))
   nil
-  (tree [this rest])
+  (tree [_ _])
   Segment
-  (tree [this rest]
-    (lazy-leaf (str this) rest)))
+  (tree [head tail]
+    (lazy-leaf (str head) tail)))
 
 (defn lazy-iterator [^Iterator iter]
   (lazy-seq
