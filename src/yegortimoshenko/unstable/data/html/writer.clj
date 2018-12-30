@@ -69,9 +69,6 @@
         (.write w (int q)))
       (.write w s))))
 
-(def ^:private comment?
-  (partial instance? Comment))
-
 (def children-that-make-body-open-mandatory
   #{:meta :link :script :style :template})
 
@@ -92,7 +89,7 @@
     (doseq [^String chunk ["<!--" text "-->"]]
       (.write w chunk)))
   Element
-  (write-node [{:keys [attrs content tag] :as elt} next ^Writer w]
+  (write-node [{:keys [attrs content tag]} next ^Writer w]
     (let [tag-name (name tag)]
       (doseq [chunk ["<" tag-name]]
         (.write w ^String chunk))
@@ -103,7 +100,7 @@
         (write-attr-value v w))
       (.write w ">")
       (write-node content nil w)
-      (when-not (spec/void-element? elt)
+      (when-not (spec/void-elements tag)
         (doseq [chunk ["</" tag-name ">"]]
           (.write w ^String chunk)))))
   Sequential

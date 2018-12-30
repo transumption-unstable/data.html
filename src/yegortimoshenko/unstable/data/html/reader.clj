@@ -39,8 +39,8 @@
   (tree [head tail]
     (case (-> head .getStartTagType .getDescription)
       "normal"
-      (let [elt (tag->Element head)]
-        (if (spec/void-element? elt)
+      (let [{:keys [tag] :as elt} (tag->Element head)]
+        (if (spec/void-elements tag)
           (lazy-leaf elt tail)
           (lazy-branch #(assoc elt :content %) tail)))
       "comment"
