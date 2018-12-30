@@ -15,7 +15,9 @@
   (empty? content))
 
 (s/def ::tag keyword?)
-(s/def ::attrs (s/map-of keyword? string?))
+(s/def ::attrs (s/and (s/map-of keyword? string?)
+                      (complement node/Element?)
+                      (complement node/Comment?)))
 (s/def ::content (s/coll-of ::node))
 
 (s/def ::element

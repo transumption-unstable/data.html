@@ -1,22 +1,19 @@
 (ns yegortimoshenko.unstable.data.html
   (:import (clojure.lang IPersistentVector ISeq))
   (:refer-clojure :exclude [comment read read-string])
-  (:require [yegortimoshenko.unstable.data.html.node :as node]
+  (:require [clojure.spec.alpha :refer [valid?]]
+            [yegortimoshenko.unstable.data.html.node :as node]
+            [yegortimoshenko.unstable.data.html.spec :as spec]
             #?(:clj [yegortimoshenko.unstable.data.html.reader :as r])
             #?(:clj [yegortimoshenko.unstable.data.html.writer :as w])))
 
 (defprotocol HTML
   (html [this]))
 
-(defn ^:private attrs? [x]
-  (and (map? x)
-       (not (node/Element? x))
-       (not (node/Comment? x))))
-
 (extend-protocol HTML
   IPersistentVector
   (html [[tag ?attrs & content]]
-    [(if (attrs? ?attrs)
+    [(if (valid? ::spec/attrs ?attrs)
       (node/->Element tag ?attrs (html content))
       (node/->Element tag {} (html (cons ?attrs content))))])
   ISeq
