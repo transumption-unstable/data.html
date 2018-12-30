@@ -10,6 +10,16 @@
 
 (set! *warn-on-reflection* true)
 
+(defn tag->Element [^StartTag tag]
+  (node/->Element
+    (keyword (.getName tag))
+    (into {} (for [^Attribute attr (.getAttributes tag)]
+               [(keyword (.getKey attr)) (.getValue attr)]))
+    ()))
+
+(defn tag->Comment [^StartTag tag]
+  (node/->Comment (.toString (.getTagContent tag))))
+
 (defprotocol Tree
   (tree [head tail]))
 
@@ -29,14 +39,12 @@
   (tree [head tail]
     (case (-> head .getStartTagType .getDescription)
       "normal"
-      (let [tag (keyword (.getName head))
-            attrs (into {} (for [^Attribute a (.getAttributes head)]
-                             [(keyword (.getKey a)) (.getValue a)]))]
-        (if (spec/void-elements tag)
-          (lazy-leaf (node/->Element tag attrs ()) tail)
-          (lazy-branch #(node/->Element tag attrs %) tail)))
+      (let [elt (tag->Element head)]
+        (if (spec/void-element? elt)
+          (lazy-leaf elt tail)
+          (lazy-branch #(assoc elt :content %) tail)))
       "comment"
-      (lazy-leaf (node/->Comment (str (.getTagContent head))) tail)))
+      (lazy-leaf (tag->Comment head) tail)))
   EndTag
   (tree [_ tail]
     (lazy-leaf nil tail))
