@@ -1,1 +1,3 @@
-{:deps {net.htmlparser.jericho/jericho-html {:mvn/version "3.4"}}}
+{:aliases {:codox {:extra-deps {codox {:mvn/version "0.10.6"}}
+                   :main-opts ["-m" "nsign.unstable.data.html.tasks.codox"]}}
+ :deps {net.htmlparser.jericho/jericho-html {:mvn/version "3.4"}}}
