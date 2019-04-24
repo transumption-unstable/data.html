@@ -1,8 +1,8 @@
-(ns yegortimoshenko.unstable.data.html.reader
+(ns nsign.unstable.data.html.reader
   "Lazy HTML reader built on top of Jericho HTML Parser."
   (:refer-clojure :exclude [read read-string])
-  (:require [yegortimoshenko.unstable.data.html.node :as node]
-            [yegortimoshenko.unstable.data.html.spec :as spec])
+  (:require [nsign.unstable.data.html.node :as node]
+            [nsign.unstable.data.html.spec :as spec])
   (:import (java.io Reader StringReader)
            (java.util Iterator)
            (net.htmlparser.jericho StreamedSource Attribute Segment

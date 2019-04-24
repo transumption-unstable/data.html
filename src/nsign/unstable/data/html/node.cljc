@@ -1,4 +1,4 @@
-(ns yegortimoshenko.unstable.data.html.node)
+(ns nsign.unstable.data.html.node)
 
 (defrecord Element [tag attrs content])
 (defrecord Comment [text])

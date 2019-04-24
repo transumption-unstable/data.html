@@ -1,4 +1,4 @@
-(ns yegortimoshenko.unstable.data.html.writer
+(ns nsign.unstable.data.html.writer
   "Minimizing HTML writer. Produces the most compact HTML representation of
   the given tree while still being conformant to the living standard.
 
@@ -11,12 +11,12 @@
   - html-minifier <https://git.io/vf3AC>
   - Html5Printer <https://git.io/fhkNT>"
   (:require [clojure.string :as str]
-            [yegortimoshenko.unstable.data.html.node]
-            [yegortimoshenko.unstable.data.html.spec :as spec])
+            [nsign.unstable.data.html.node]
+            [nsign.unstable.data.html.spec :as spec])
   (:import (clojure.lang Keyword Sequential)
            (java.io Writer StringWriter)
            (java.util Set)
-           (yegortimoshenko.unstable.data.html.node Comment Element)))
+           (nsign.unstable.data.html.node Comment Element)))
 
 (set! *warn-on-reflection* true)
 

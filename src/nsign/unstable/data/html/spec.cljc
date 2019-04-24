@@ -1,7 +1,7 @@
-(ns yegortimoshenko.unstable.data.html.spec
+(ns nsign.unstable.data.html.spec
   (:require [clojure.spec.alpha :as s]
             [clojure.string :as str]
-            [yegortimoshenko.unstable.data.html.node :as node]))
+            [nsign.unstable.data.html.node :as node]))
 
 (s/def ::tag keyword?)
 (s/def ::attrs (s/and (s/map-of keyword? string?)

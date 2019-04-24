@@ -1,10 +1,10 @@
-(ns yegortimoshenko.unstable.data.html
+(ns nsign.unstable.data.html
   (:refer-clojure :exclude [comment read read-string])
   (:require [clojure.spec.alpha :refer [valid?]]
-            [yegortimoshenko.unstable.data.html.node :as node]
-            [yegortimoshenko.unstable.data.html.spec :as spec]
-            #?(:clj [yegortimoshenko.unstable.data.html.reader :as r])
-            #?(:clj [yegortimoshenko.unstable.data.html.writer :as w]))
+            [nsign.unstable.data.html.node :as node]
+            [nsign.unstable.data.html.spec :as spec]
+            #?(:clj [nsign.unstable.data.html.reader :as r])
+            #?(:clj [nsign.unstable.data.html.writer :as w]))
   (:import (clojure.lang IPersistentVector ISeq)))
 
 (defn comment [text]
