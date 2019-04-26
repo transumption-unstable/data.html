@@ -2,5 +2,5 @@
 
 stdenv.mkDerivation rec {
   name = "unstable.data.html";
-  buildInputs = [ clojure ];
+  buildInputs = [ clojure git ];
 }
